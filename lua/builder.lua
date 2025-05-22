@@ -35,6 +35,12 @@ function M.setup(opt)
     else
         set_default_targets()
     end
+
+	if opt.keys ~= nil then
+		for _, map in pairs(opt.keys) do
+			vim.keymap.set(map[1], map[2], map[3], map[4])
+		end
+	end
 end
 
 -- Function to run the build command
