@@ -51,9 +51,20 @@ function M.run(opt)
     vim.fn.setqflist({}, 'r')
 
     local line_n = 1
+    local errors = {}
+    local data_list = {}
 
     local on_exit = function(_)
         line_n = 1
+        print(vim.inspect(errors))
+        print(vim.inspect(data_list))
+        errors = {}
+        data_list = {}
+    end
+
+    local on_stderr = function(err, data)
+        table.insert(errors, err)
+        table.insert(data_list, data)
     end
 
     local on_stdout = function(_, data)
@@ -97,7 +108,8 @@ function M.run(opt)
         return
     end
 
-    vim.system({'python', 'cbuild.py', M._targets[opt.target]}, { text = true, stdout = on_stdout, cwd = vim.fn.getcwd()}, on_exit)
+    vim.system({'python', 'cbuild.py', M._targets[opt.target]}, {
+        text = true, stdout = on_stdout, cwd = vim.fn.getcwd(), stderr = on_stderr}, on_exit)
 end
 
 return M
