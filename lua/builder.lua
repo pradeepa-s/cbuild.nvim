@@ -2,6 +2,7 @@ local M = {}
 
 M._quiet = false
 M._targets = {}
+M._concat_errors = true
 
 local set_default_targets = function()
     M._targets = {
@@ -50,56 +51,99 @@ function M.run(opt)
     -- Clear quickfix list
     vim.fn.setqflist({}, 'r')
 
-    local line_n = 1
-    local errors = {}
-    local data_list = {}
+    local stdout_lines = {}
+    local stdout_errors = {}
+    local stdout_all_errors = {}
 
-    local on_exit = function(_)
-        line_n = 1
-        print(vim.inspect(errors))
-        print(vim.inspect(data_list))
-        errors = {}
-        data_list = {}
-    end
-
-    local on_stderr = function(err, data)
-        table.insert(errors, err)
-        table.insert(data_list, data)
-    end
-
-    local on_stdout = function(_, data)
-        vim.schedule(function()
-            if data == nil then
-                return
-            end
-
-            -- Replace \n\r with \n
-            data = string.gsub(data, "\r\n", "\n") 
-
-            -- Split text into lines and add lines to the qf_list
-            local lines = vim.split(data, '\n')
-            local qf_list = {}
-            for _, line in ipairs(lines) do
-                if line ~= "" then
+    local exit = function(_, _, _)
+        if #stdout_all_errors > 0 then
+            vim.schedule(function()
+                local qf_list = {}
+                for _, line in ipairs(stdout_all_errors) do
                     table.insert(qf_list, {
                         text = line
                     })
-                    line_n = line_n + 1
                 end
-            end
 
-            -- TODO: Set title
-            vim.fn.setqflist(qf_list, 'a');
+                stdout_all_errors = {}
 
-            if M._quiet == false then
-                -- Get current focus window
-                local win = vim.api.nvim_get_current_win()
-                vim.cmd('copen')
-                vim.cmd('clast')
-                -- Restore focus to the original window
-                vim.api.nvim_set_current_win(win) 
+                -- TODO: Set title
+                vim.fn.setqflist(qf_list, 'a');
+
+                if M._quiet == false then
+                    -- Get current focus window
+                    local win = vim.api.nvim_get_current_win()
+                    vim.cmd('copen')
+                    vim.cmd('clast')
+                    -- Restore focus to the original window
+                    vim.api.nvim_set_current_win(win)
+                end
+            end)
+        end
+    end
+
+    local stdout_err = ''
+    local stderr = function(_, error, _)
+        for _, e in pairs(error) do
+            -- Split lines
+            if e == '' then
+                local lines = vim.split(stdout_err, '\r')
+                for _, l in pairs(lines) do
+                    if l ~= '' then
+                        if M._concat_errors then
+                            table.insert(stdout_all_errors, l)
+                        end
+                        table.insert(stdout_errors, l)
+                    end
+                end
+                stdout_err = ''
+            else
+                stdout_err = stdout_err .. e
             end
-        end)
+        end
+    end
+
+    local stdout_line = ''
+    local stdout = function(_, data, _)
+        for _, d in pairs(data) do
+            -- Split lines
+            if d == '' then
+                local lines = vim.split(stdout_line, '\r')
+                for _, l in pairs(lines) do
+                    if l ~= '' then
+                        table.insert(stdout_lines, l)
+                    end
+                end
+                stdout_line = ''
+            else
+                stdout_line = stdout_line .. d
+            end
+        end
+
+        if #stdout_lines > 0 then
+            vim.schedule(function()
+                local qf_list = {}
+                for _, line in ipairs(stdout_lines) do
+                    table.insert(qf_list, {
+                        text = line
+                    })
+                end
+
+                stdout_lines = {}
+
+                -- TODO: Set title
+                vim.fn.setqflist(qf_list, 'a');
+
+                if M._quiet == false then
+                    -- Get current focus window
+                    local win = vim.api.nvim_get_current_win()
+                    vim.cmd('copen')
+                    vim.cmd('clast')
+                    -- Restore focus to the original window
+                    vim.api.nvim_set_current_win(win)
+                end
+            end)
+        end
     end
 
     -- Check whether opt.target is in registered targets
@@ -108,8 +152,24 @@ function M.run(opt)
         return
     end
 
-    vim.system({'python', 'cbuild.py', M._targets[opt.target]}, {
-        text = true, stdout = on_stdout, cwd = vim.fn.getcwd(), stderr = on_stderr}, on_exit)
+    vim.fn.jobstart({'python', 'cbuild.py', M._targets[opt.target]},
+        {
+            on_stdout = stdout,
+            on_stderr = stderr,
+            on_exit = exit,
+            cwd = vim.fn.getcwd()
+        }
+    )
 end
+
+-- local opt = {
+--     quiet = false,
+--     targets = {
+--         ['1'] = 'build'
+--     }
+-- }
+
+-- M.setup(opt)
+-- M.run({target = '1'})
 
 return M
