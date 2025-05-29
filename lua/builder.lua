@@ -48,6 +48,10 @@ end
 -- @param opt: Options is a table with the following keys:
 -- --   - target: As per the target name injected using Setup
 function M.run(opt)
+    if M._busy then
+        return
+    end
+
     -- Clear quickfix list
     vim.fn.setqflist({}, 'r')
 
@@ -80,6 +84,7 @@ function M.run(opt)
                 end
             end)
         end
+        M._busy = false
     end
 
     local stdout_err = ''
@@ -160,6 +165,8 @@ function M.run(opt)
             cwd = vim.fn.getcwd()
         }
     )
+
+    M._busy = true
 end
 
 -- local opt = {
