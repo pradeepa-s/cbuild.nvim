@@ -1,4 +1,4 @@
-utils = require('cbuild.utils')
+utils = require('utils')
 
 local M = {}
 
