@@ -13,6 +13,8 @@ M._get_errors = function()
             table.insert(errors, line)
         elseif string.match(line, "%(%d+%):.+error") then
             table.insert(errors, line)
+        elseif string.match(line, "%(%d+%):.+note:") then
+            table.insert(errors, line)
         end
     end
     return errors
