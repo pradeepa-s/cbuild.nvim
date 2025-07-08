@@ -21,9 +21,6 @@ M._populate_quickfix = function(errors)
     if #errors > 0 then
         vim.fn.setqflist({}, 'r', {title = 'Compile errors ' .. M._last_cmd, lines = errors})
         vim.cmd('copen')
-    else
-        vim.fn.setqflist({}, 'r', {})
-        vim.cmd('cclose')
     end
 end
 
@@ -43,6 +40,7 @@ function M.run_command(cwd, command)
         vim.api.nvim_buf_delete(M._terminal_win, {force = true})
     end
 
+    vim.cmd("cclose")
     vim.defer_fn(function()
         vim.cmd("new")
         M._terminal_win = vim.api.nvim_get_current_buf()
