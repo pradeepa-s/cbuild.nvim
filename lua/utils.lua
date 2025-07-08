@@ -11,7 +11,7 @@ M._get_errors = function()
     for _, line in ipairs(lines) do
         if string.match(line, ":%d+:%d+:.+error:") then
             table.insert(errors, line)
-        elseif string.match(line, "(%d+):.+error") then
+        elseif string.match(line, "%(%d+%):.+error") then
             table.insert(errors, line)
         end
     end
