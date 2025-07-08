@@ -46,6 +46,7 @@ function M.run_command(cwd, command)
         M._terminal_win = vim.api.nvim_get_current_buf()
         vim.cmd.wincmd("J")
         vim.cmd('resize 20')
+        vim.cmd("normal! G")
         M._execute_cmd(cwd, command, curr_win)
     end, 100)
 end
