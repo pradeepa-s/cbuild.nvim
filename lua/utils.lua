@@ -19,7 +19,7 @@ end
 M._populate_quickfix = function(errors)
     -- Add the errors to the quickfix list
     if #errors > 0 then
-        vim.fn.setqflist({}, 'r', {title = 'Compile errors ' .. M._cmd, lines = errors})
+        vim.fn.setqflist({}, 'r', {title = 'Compile errors ' .. M._last_cmd, lines = errors})
         vim.cmd('copen')
     end
 end
