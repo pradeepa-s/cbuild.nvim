@@ -9,7 +9,7 @@ M._get_errors = function()
     local errors = {}
 
     for _, line in ipairs(lines) do
-        if string.match(line, ":%d+:%d+: error:") then
+        if string.match(line, ":%d+:%d+:.+error:") then
             table.insert(errors, line)
         end
     end
@@ -21,6 +21,9 @@ M._populate_quickfix = function(errors)
     if #errors > 0 then
         vim.fn.setqflist({}, 'r', {title = 'Compile errors ' .. M._last_cmd, lines = errors})
         vim.cmd('copen')
+    else
+        vim.fn.setqflist({}, 'r', {})
+        vim.cmd('cclose')
     end
 end
 
