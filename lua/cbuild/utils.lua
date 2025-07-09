@@ -54,4 +54,28 @@ function M.run_command(cwd, command)
         M._execute_cmd(cwd, command, curr_win)
     end, 100)
 end
+
+M.get_test_name = function()
+    -- Search backwards for a line starting with the word "class" and ending with "(BDDTest):"
+    -- ncbW: do [n]ot move cursor, accept match at [c]ursor, search [b]ackwards, no [W]rap around
+    local val = vim.fn.search('^class .*(BDDTest):$', 'ncbW')
+    -- Extract the class name from the line
+    if val > 0 then
+        local line = vim.fn.getline(val)
+        local class_name = line:match('^class (.*)%(BDDTest%):$')
+        if class_name then
+            return class_name
+        end
+    end
+    print("Test case not found.")
+    return nil
+end
+
+M.generate_test_command = function(test_name)
+    if test_name then
+        local command = "python fgtest.py -s " .. test_name
+        return command
+    end
+end
+
 return M
