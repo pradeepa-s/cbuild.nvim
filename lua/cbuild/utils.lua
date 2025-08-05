@@ -35,7 +35,10 @@ M._execute_cmd = function(cwd, cmd, curr_win)
             local errors = M._get_errors()
             M._populate_quickfix(errors)
         end})
-    vim.api.nvim_set_current_win(curr_win)
+    -- If current window is valid
+    if vim.api.nvim_win_is_valid(curr_win) then
+        vim.api.nvim_set_current_win(curr_win)
+    end
 end
 
 function M.run_command(cwd, command)
