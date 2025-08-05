@@ -78,4 +78,11 @@ M.generate_test_command = function(test_name)
     end
 end
 
+M.close_terminal = function()
+    if M._terminal_win and vim.api.nvim_buf_is_valid(M._terminal_win) then
+        vim.api.nvim_buf_delete(M._terminal_win, {force = true})
+        M._terminal_win = nil
+    end
+end
+
 return M
