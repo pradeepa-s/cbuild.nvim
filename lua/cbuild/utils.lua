@@ -35,6 +35,10 @@ M._execute_cmd = function(cwd, cmd, curr_win)
             local errors = M._get_errors()
             M._populate_quickfix(errors)
         end})
+
+    -- Always select the last line (for auto scrolling)
+    vim.cmd("normal! G")
+
     -- If current window is valid
     if vim.api.nvim_win_is_valid(curr_win) then
         vim.api.nvim_set_current_win(curr_win)
@@ -53,7 +57,6 @@ function M.run_command(cwd, command)
         M._terminal_win = vim.api.nvim_get_current_buf()
         vim.cmd.wincmd("J")
         vim.cmd('resize 20')
-        vim.cmd("normal! G")
         M._execute_cmd(cwd, command, curr_win)
     end, 100)
 end
